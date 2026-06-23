@@ -25,7 +25,7 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file("Kakathic.jks")
+            storeFile file("ok.jks")
             storePassword System.getenv("KEY_PASSWORD")
             keyAlias System.getenv("KEY_ALIAS")
             keyPassword System.getenv("KEY_PASSWORD")
