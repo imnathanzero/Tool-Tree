@@ -3,6 +3,7 @@
 
 # untested feature
 #<param name="rezetprop_patch" label="'$label_reset_prop'" desc="'$desc_reset_prop', system" type="bool" />
+#<param name="fix_window" label="'$label_fix_window'" desc="'$required_files_text': miui-services.jar" type="bool" />
 
 home(){
 echo '<?xml version="1.0" encoding="UTF-8" ?>
@@ -32,10 +33,21 @@ checktime
 </action>
 
 <action title="'$title_delete'" >
-<param name="del_app_patch" type="text" value-sh="glog del_app_patch" required="true" placeholder="VoiceAssist Sogou"/>
+<param name="del_app_patch" type="text" value-sh="glog del_app_patch" required="true" desc="'$text_del_file'" placeholder="VoiceAssist Sogou"/>
 <set>
 slog del_app_patch "$del_app_patch"
 '$pathsh' del_app "$del_app_patch"
+</set>
+</action>
+</group>
+
+<group>
+<action title="'$title_boot_patch'" warn="'$title_boot_patch2'" >
+<param name="FOLDER" option-sh="findfile 0 $SDH/$PTSH | grep boot" desc="'$string_text_2': vendor_boot, boot" label="'$select_text'" required="true"/>
+<param name="fix_fake_lock" label="'$title_boot_patch3'" desc="" type="bool" />
+<param name="fix_diselinux" label="'$title_boot_patch4'" desc="" type="bool" />
+<set>
+'$pathsh' patch_boot "$FOLDER"
 </set>
 </action>
 </group>
@@ -84,12 +96,13 @@ checktime
 
 <group>
 <action title="'$title_many_patch'" summary="Xiaomi, Android 12+">
-<param name="FILE" option-sh="'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
+<param name="FILE" option-sh="'$pathsh' search services.jar miui-services.jar PowerKeeper.apk miui-framework.jar *SecurityCenter.apk" value-sh="glog fix_manyo_patch_os" multiple="true" desc="'$string_text_1': '$PTSH'/***, /sdcard/TREE/APK" required="true"/>
 <param name="fix_screen" label="'$label_fix_screen'" desc="'$required_files_text': miui-services.jar, services.jar" type="bool" />
 <param name="fix_fps" label="'$label_fix_fps'" desc="'$required_files_text': PowerKeeper.apk" type="bool" />
-<param name="fix_window" label="'$label_fix_window'" desc="'$required_files_text': miui-services.jar" type="bool" />
 <param name="fix_reset_theme" label="'$label_fix_reset_theme'" desc="'$required_files_text': miui-framework.jar" type="bool" />
 <param name="fix_show_error" label="'$label_fix_show_error'" desc="'$required_files_text': services.jar" type="bool" />
+<param name="fix_fpscam" label="'$label_fix_fps_cam'" desc="'$required_files_text': miui-services.jar" type="bool" />
+<param name="fix_off_10s" label="'$label_fix_off_10s'" desc="'$required_files_text': SecurityCenter.apk" type="bool" />
 <set>
 slog fix_manyo_patch_os "$FILE"
 '$pathsh' fixmultiple "$FILE"
@@ -112,6 +125,10 @@ checktime
 </set>
 </action>
 </group>
+
+<text><slices>
+<slice color="#C91A1A">'$reminder_notes'</slice>
+</slices></text>
 
 </group>' | sed -e 's|\&|\&amp;|g' -e 's|§|\&#xA;|g'
 }

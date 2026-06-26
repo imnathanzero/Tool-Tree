@@ -2,6 +2,32 @@
 # Kakathic
 set -o pipefail
 
+patch_boot(){
+# file header
+path_boots="$SDH/$PTSH/$@/header"
+
+if [ "$fix_fake_lock" == 1 ]; then
+    if ! grep -q "androidboot.flash.locked" "$path_boots"; then
+    echo "Add: androidboot.flash.locked=1 androidboot.verifiedbootstate=green androidboot.vbmeta.device_state=locked"
+    sed -i 's/\(cmdline=.*\)/\1 androidboot.flash.locked=1 androidboot.verifiedbootstate=green androidboot.vbmeta.device_state=locked/' $path_boots
+    fi
+fi
+
+if [ "$fix_diselinux" == 1 ]; then
+    if ! grep -q "androidboot.selinux=permissive" "$path_boots"; then
+    echo "Add: androidboot.selinux=permissive"
+    echo
+    sed -i 's/\(cmdline=.*\)/\1 androidboot.selinux=permissive/' $path_boots
+    fi
+    echo "Hidden hints selinux: Add any to init/file.rc
+on property:ro.boot.selinux=permissive
+    chmod 440 /sys/fs/selinux/policy
+    write /sys/fs/selinux/enforce 1
+    chmod 640 /sys/fs/selinux/enforce"
+fi
+}
+
+
 fixapps(){
 for vv in $@; do
 [ ! -e "$vv" ] && { about "Item not found: $vv"; continue; }
@@ -113,7 +139,15 @@ echo
 # patch method
 if [ "${vv##*/}" == "miui-services.jar" ];then
     [ "$fix_screen" == 1 ] && Thayvc 0 '.method .*. notAllowCaptureDisplay(Lcom' $oi/smali/classes*/com/android/server/wm/WindowManagerServiceImpl.smali
+    [ "$fix_fpscam" == 1 ] && Thayvc 1 '.method .*. shouldDisableAospCameraPolicy(Lcom' $oi/smali/classes*/com/android/server/wm/MiuiRefreshRatePolicy.smali
     [ "$fix_window" == 1 ] && Thayvc 4 '.method .*. getMaxMiuiFreeFormStackCount(Ljava' $oi/smali/classes*/com/android/server/wm/MiuiFreeFormStackDisplayStrategy.smali
+elif [[ "${vv##*/}" == *SecurityCenter* ]];then
+    if [ "$fix_off_10s" == 1 ]; then
+        urlhdddasx="$oi/smali/classes*/com/miui/permcenter/privacymanager/InterceptPermissionFragment.smali"
+        if [ "$(grep -cm1 "const/16 v0, 0xa" $urlhdddasx)" == 1 ];then
+        Thaythe "const/16 v0, 0xa" "const/4 v0, 0x0" $urlhdddasx
+        fi
+    fi
 elif [ "${vv##*/}" == "miui-framework.jar" ];then
     [ "$fix_reset_theme" == 1 ] && Thayvc -v '.method .*. validateTheme(Landroid' $oi/smali/classes/miui/drm/ThemeReceiver.smali
     if [ "$fix_window" == 1 ]; then
